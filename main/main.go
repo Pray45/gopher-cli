@@ -1,10 +1,11 @@
 package main
 
 import (
+	"GoCLI/coustom_cmd"
+	"GoCLI/helper"
 	"bufio"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 )
 
@@ -54,21 +55,12 @@ func runcmd (inputln string) {
 		os.Exit(0)
 	}
 
-	if cmd == "hello" || cmd == "hii" || cmd == "hi" {
-		println("Hello, gopher cli this side...")
+	if helper.IsBuiltin(cmd) {
+		helper.Run(cmd, params)
 		return
 	}
 
-	command := exec.Command(cmd, params...)
+	coustomcmd.Coustomcmd(cmd)
 
-	command.Stdin = os.Stdin
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
-	
-
-	if err := command.Run(); err != nil {
-		fmt.Println("error:", err)
-	}
-
+	helper.ExternalRun(cmd, params);
 }
-
