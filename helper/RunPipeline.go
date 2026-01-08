@@ -4,56 +4,59 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 )
 
-func RunPipeline(input string) {
-	segments := strings.Split(input, "|")
+func RunPipelineCmds(cmds [][]string) {
 
-	var commands []*exec.Cmd
-	var prevStdout *os.File
+	if len(cmds) < 2 {
+		fmt.Println("pipeline error: not enough commands")
+		return
+	}
 
-	for i, segment := range segments {
-		segment = strings.TrimSpace(segment)
-		parts := strings.Fields(segment)
+	var processes []*exec.Cmd
+	var prevReader *os.File
 
-		if len(parts) == 0 {
+	for i, cmdParts := range cmds {
+
+		if len(cmdParts) == 0 {
 			return
 		}
 
-		cmd := exec.Command(parts[0], parts[1:]...)
+		cmd := exec.Command(cmdParts[0], cmdParts[1:]...)
 		cmd.Stderr = os.Stderr
 
+		// stdin
 		if i == 0 {
 			cmd.Stdin = os.Stdin
 		} else {
-			cmd.Stdin = prevStdout
+			cmd.Stdin = prevReader
 		}
 
-		if i == len(segments)-1 {
+		// stdout
+		if i == len(cmds)-1 {
 			cmd.Stdout = os.Stdout
 		} else {
-			pipeReader, pipeWriter, err := os.Pipe()
+			reader, writer, err := os.Pipe()
 			if err != nil {
 				fmt.Println("pipe error:", err)
 				return
 			}
 
-			cmd.Stdout = pipeWriter
-			prevStdout = pipeReader
+			cmd.Stdout = writer
+			prevReader = reader
 		}
 
-		commands = append(commands, cmd)
+		processes = append(processes, cmd)
 	}
 
-	for _, cmd := range commands {
-		if err := cmd.Start(); err != nil {
+	for _, p := range processes {
+		if err := p.Start(); err != nil {
 			fmt.Println("start error:", err)
 			return
 		}
 	}
 
-	for _, cmd := range commands {
-		cmd.Wait()
+	for _, p := range processes {
+		p.Wait()
 	}
 }
