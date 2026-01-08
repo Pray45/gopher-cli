@@ -1,8 +1,8 @@
 package main
 
 import (
-	"GoCLI/coustom_cmd"
 	"GoCLI/helper"
+	"GoCLI/parser"
 	"bufio"
 	"fmt"
 	"os"
@@ -14,53 +14,46 @@ func main() {
 	read := bufio.NewScanner(os.Stdin)
 
 	for {
-
-		Printdefault()
+		printPrompt()
 
 		if !read.Scan() {
-			fmt.Print()
+			fmt.Println()
 			break
 		}
 
 		inputln := strings.TrimSpace(read.Text())
-
 		if inputln == "" {
 			continue
 		}
 
-		runcmd(inputln);
-
+		runCmd(inputln)
 	}
-
 }
 
-func Printdefault() {
-
+func printPrompt() {
 	fmt.Print("[gopher cli] > ")
-
 }
 
-func runcmd (inputln string) {
+func runCmd(inputln string) {
 
-	parse := strings.Fields(inputln)
-
-	if len(parse) == 0 {
+	tokens, err := parser.Tokenize(inputln)
+	if err != nil {
+		fmt.Println("parse error:", err)
 		return
 	}
 
-	cmd := parse[0]
-	params := parse[1:]
-
-	if cmd == "exit" || cmd == "EXIT" {
-		os.Exit(0)
+	if strings.Contains(inputln, "|") {
+		helper.RunPipeline(inputln)
+		return
 	}
+
+	cmd := tokens[0]
+	params := tokens[1:]
 
 	if helper.IsBuiltin(cmd) {
 		helper.Run(cmd, params)
 		return
 	}
-
-	coustomcmd.Coustomcmd(cmd)
-
-	helper.ExternalRun(cmd, params);
+	
+	helper.ExternalRun(cmd, params)
 }
