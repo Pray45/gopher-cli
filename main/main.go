@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gophercli/external"
 	"gophercli/helper"
+	"gophercli/parser"
 	"os"
 	"strings"
 )
@@ -32,13 +33,23 @@ func main() {
 }
 
 func runCommand(line string) {
-	parts := strings.Fields(line)
-	if len(parts) == 0 {
+
+	line = strings.TrimSpace(line)
+	if line == "" {
 		return
 	}
 
-	cmd := parts[0]
-	args := parts[1:]
+	tokens, err := parser.Lexcmd(line)
+	if err != nil {
+		fmt.Println("parse error:", err)
+		return
+	}
+
+	cmd := tokens[0].Value
+	args := []string{}
+	for _, t := range tokens[1:] {
+		args = append(args, t.Value)
+	}
 
 	if helper.IsBuiltin(cmd) {
 
@@ -55,5 +66,6 @@ func runCommand(line string) {
 		return
 	}
 
-	external.Externalcmd(line)
+	external.Externalcmd(cmd, args)
+
 }
