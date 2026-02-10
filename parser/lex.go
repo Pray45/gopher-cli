@@ -3,7 +3,6 @@ package parser
 import "fmt"
 
 func Lexcmd(input string) ([]Token, error) {
-
 	var tokens []Token
 	var current []rune
 
@@ -13,15 +12,15 @@ func Lexcmd(input string) ([]Token, error) {
 
 	flush := func() {
 		if len(current) > 0 {
-			tokens = append(tokens, Token{
-				Type:  WORD,
-				Value: string(current),
-			})
+			tokens = append(tokens, Token{Type: WORD, Value: string(current)})
 			current = nil
 		}
 	}
 
-	for _, ch := range input {
+	runes := []rune(input)
+
+	for i := 0; i < len(runes); i++ {
+		ch := runes[i]
 
 		if escaped {
 			current = append(current, ch)
@@ -44,9 +43,29 @@ func Lexcmd(input string) ([]Token, error) {
 			continue
 		}
 
-		if ch == ' ' && !inSingle && !inDouble {
-			flush()
-			continue
+		if !inSingle && !inDouble {
+			switch ch {
+			case ' ':
+				flush()
+				continue
+			case '|':
+				flush()
+				tokens = append(tokens, Token{Type: PIPE, Value: "|"})
+				continue
+			case '<':
+				flush()
+				tokens = append(tokens, Token{Type: REDIRECT_IN, Value: "<"})
+				continue
+			case '>':
+				flush()
+				if i+1 < len(runes) && runes[i+1] == '>' {
+					tokens = append(tokens, Token{Type: REDIRECT_APPEND, Value: ">>"})
+					i++
+				} else {
+					tokens = append(tokens, Token{Type: REDIRECT_OUT, Value: ">"})
+				}
+				continue
+			}
 		}
 
 		current = append(current, ch)

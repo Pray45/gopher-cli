@@ -6,41 +6,21 @@ import (
 )
 
 func IsBuiltin(cmd string) bool {
-	switch cmd {
-	case "cd", "pwd", "exit":
-		return true
-	default:
-		return false
-	}
+	return cmd == "cd" || cmd == "pwd" || cmd == "exit"
 }
 
 func BuiltinCd(args []string) {
-
-	var target string
-
-	if len(args) == 0 {
-
-		target = os.Getenv("HOME")
-		if target == "" {
-			fmt.Println("cd: HOME not set")
-			return
-		}
-	} else {
-		target = args[0]
+	dir := os.Getenv("HOME")
+	if len(args) > 0 {
+		dir = args[0]
 	}
-
-	if err := os.Chdir(target); err != nil {
-		fmt.Println("cd error:", err)
+	if err := os.Chdir(dir); err != nil {
+		fmt.Println(err)
 	}
-
 }
 
 func BuiltinPwd() {
-	dir, err := os.Getwd()
-	if err != nil {
-		fmt.Println("pwd error:", err)
-		return
-	}
+	dir, _ := os.Getwd()
 	fmt.Println(dir)
 }
 

@@ -3,69 +3,55 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"gophercli/external"
-	"gophercli/helper"
-	"gophercli/parser"
 	"os"
 	"strings"
+
+	"gophercli/parser"
+	"gophercli/helper"
+	"gophercli/external"
 )
 
 func main() {
-
-	render := bufio.NewScanner(os.Stdin)
+	reader := bufio.NewScanner(os.Stdin)
 
 	for {
 		dir, _ := os.Getwd()
-		basedir := dir[strings.LastIndex(dir, "/")+1:]
-		fmt.Printf("[Gopher $%s ] > ", basedir)
-		if !render.Scan() {
+		fmt.Printf("[Gopher %s] > ", dir[strings.LastIndex(dir, "/")+1:])
+
+		if !reader.Scan() {
 			fmt.Println()
-			break
-		}
-		line := render.Text()
-		if line == "exit" {
-			break
+			return
 		}
 
-		runCommand(line)
-
-	}
-}
-
-func runCommand(line string) {
-
-	line = strings.TrimSpace(line)
-	if line == "" {
-		return
-	}
-
-	tokens, err := parser.Lexcmd(line)
-	if err != nil {
-		fmt.Println("parse error:", err)
-		return
-	}
-
-	cmd := tokens[0].Value
-	args := []string{}
-	for _, t := range tokens[1:] {
-		args = append(args, t.Value)
-	}
-
-	if helper.IsBuiltin(cmd) {
-
-		switch cmd {
-
-		case "cd":
-			helper.BuiltinCd(args)
-		case "pwd":
-			helper.BuiltinPwd()
-		case "exit":
-			helper.BuiltinExit()
+		line := strings.TrimSpace(reader.Text())
+		if line == "" {
+			continue
 		}
 
-		return
+		tokens, err := parser.Lexcmd(line)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		commands, err := parser.ParseCommands(tokens)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		if helper.IsBuiltin(commands[0].Args[0]) {
+			switch commands[0].Args[0] {
+			case "cd":
+				helper.BuiltinCd(commands[0].Args[1:])
+			case "pwd":
+				helper.BuiltinPwd()
+			case "exit":
+				helper.BuiltinExit()
+			}
+			continue
+		}
+
+		external.Execute(commands)
 	}
-
-	external.Externalcmd(cmd, args)
-
 }
