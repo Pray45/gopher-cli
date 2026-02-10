@@ -6,12 +6,26 @@ import (
 	"os"
 	"strings"
 
-	"gophercli/parser"
-	"gophercli/helper"
 	"gophercli/external"
+	"gophercli/helper"
+	"gophercli/parser"
 )
 
 func main() {
+	fmt.Println(`
+   _____             _                  _____ _      _____ 
+  / ____|           | |                / ____| |    |_   _|
+ | |  __  ___  _ __ | |__   ___ _ __  | |    | |      | |  
+ | | |_ |/ _ \| '_ \| '_ \ / _ \ '__| | |    | |      | |  
+ | |__| | (_) | |_) | | | |  __/ |    | |____| |____ _| |_ 
+  \_____|\___/| .__/|_| |_|\___|_|     \_____|______|_____|
+              | |                                           
+              |_|                                           
+
+  A Minimal Unix-like Shell Implemented in Go
+------------------------------------------------------`)
+	fmt.Println("")
+
 	reader := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -48,6 +62,8 @@ func main() {
 				helper.BuiltinPwd()
 			case "exit":
 				helper.BuiltinExit()
+			case "help":
+				helper.BuiltinHelp()
 			}
 			continue
 		}
